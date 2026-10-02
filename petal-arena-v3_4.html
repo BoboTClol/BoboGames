@@ -66,14 +66,14 @@ canvas{display:block}#cv{width:100%;height:100%;touch-action:none}
 #mtog i{width:46px;height:24px;border-radius:12px;background:#555;position:relative;transition:.2s}#mtog i:after{content:"";position:absolute;left:3px;top:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:.2s}
 #mtog input:checked+i{background:#4fbf6c}#mtog input:checked+i:after{left:25px}
 #mctl{display:none;position:fixed;inset:0;pointer-events:none;z-index:7}body.mob #mctl{display:block}
-#joy{position:absolute;left:18px;bottom:calc(150px + env(safe-area-inset-bottom,0px));width:var(--js,120px);height:var(--js,120px);border-radius:50%;background:rgba(255,255,255,.18);border:3px solid rgba(255,255,255,.5);pointer-events:auto;touch-action:none}
+#joy{position:absolute;left:18px;bottom:calc(14px + env(safe-area-inset-bottom,0px));width:var(--js,120px);height:var(--js,120px);border-radius:50%;background:rgba(255,255,255,.18);border:3px solid rgba(255,255,255,.5);pointer-events:auto;touch-action:none}
 #knob{position:absolute;left:50%;top:50%;width:43%;height:43%;margin:calc(var(--js,120px)*-.215) 0 0 calc(var(--js,120px)*-.215);border-radius:50%;background:rgba(255,255,255,.7);border:3px solid rgba(0,0,0,.25)}
 #jrs{position:absolute;right:-14px;top:-14px;width:30px;height:30px;border-radius:50%;background:rgba(0,0,0,.55);border:2px solid #fff;color:#fff;font-size:18px;line-height:26px;text-align:center;cursor:nwse-resize;touch-action:none}
-#bAtk,#bDef{position:absolute;bottom:calc(150px + env(safe-area-inset-bottom,0px));width:78px;height:78px;border-radius:50%;border:3px solid rgba(0,0,0,.3);font-weight:800;font-size:12px;color:#fff;pointer-events:auto;touch-action:none;text-shadow:0 1px 2px #000}
+#bAtk,#bDef{position:absolute;bottom:calc(14px + env(safe-area-inset-bottom,0px));width:78px;height:78px;border-radius:50%;border:3px solid rgba(0,0,0,.3);font-weight:800;font-size:12px;color:#fff;pointer-events:auto;touch-action:none;text-shadow:0 1px 2px #000}
 #bAtk{right:16px;background:rgba(229,72,77,.85)}#bDef{right:104px;background:rgba(70,130,220,.85)}
 #mbtns{position:absolute;right:8px;top:calc(212px + env(safe-area-inset-top,0px));display:flex;flex-direction:column;gap:8px}
 #mbtns button{width:46px;height:46px;border-radius:50%;border:3px solid #fff;background:rgba(0,0,0,.5);color:#fff;font-size:20px;font-weight:800;pointer-events:auto}
-body.mob{touch-action:none}body.mob #inv,body.mob #craft{touch-action:pan-y}body.mob #hint,body.mob #tbtn{display:none}
+body.mob #hud{bottom:calc(148px + env(safe-area-inset-bottom,0px))}body.mob{touch-action:none}body.mob #inv,body.mob #craft{touch-action:pan-y}body.mob #hint,body.mob #tbtn{display:none}
 body.mob #slots .it,body.mob #bk .it,body.mob #bk .es{width:40px;height:40px}body.mob #slots,body.mob #bk{gap:4px}body.mob #slots .it canvas,body.mob #bk .it canvas{width:24px;height:24px}body.mob #slots .it em,body.mob #bk .it em{font-size:7px}
 </style></head><body>
 <canvas id="cv"></canvas>
