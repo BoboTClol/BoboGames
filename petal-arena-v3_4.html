@@ -66,6 +66,9 @@ canvas{display:block}#cv{width:100%;height:100%;touch-action:none}
 #mtog i{width:46px;height:24px;border-radius:12px;background:#555;position:relative;transition:.2s}#mtog i:after{content:"";position:absolute;left:3px;top:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:.2s}
 #mtog input:checked+i{background:#4fbf6c}#mtog input:checked+i:after{left:25px}
 #mctl{display:none;position:fixed;inset:0;pointer-events:none;z-index:7}body.mob #mctl{display:block}
+#joy{position:absolute;left:18px;bottom:calc(150px + env(safe-area-inset-bottom,0px));width:var(--js,120px);height:var(--js,120px);border-radius:50%;background:rgba(255,255,255,.18);border:3px solid rgba(255,255,255,.5);pointer-events:auto;touch-action:none}
+#knob{position:absolute;left:50%;top:50%;width:43%;height:43%;margin:calc(var(--js,120px)*-.215) 0 0 calc(var(--js,120px)*-.215);border-radius:50%;background:rgba(255,255,255,.7);border:3px solid rgba(0,0,0,.25)}
+#jrs{position:absolute;right:-14px;top:-14px;width:30px;height:30px;border-radius:50%;background:rgba(0,0,0,.55);border:2px solid #fff;color:#fff;font-size:18px;line-height:26px;text-align:center;cursor:nwse-resize;touch-action:none}
 #bAtk,#bDef{position:absolute;bottom:calc(150px + env(safe-area-inset-bottom,0px));width:78px;height:78px;border-radius:50%;border:3px solid rgba(0,0,0,.3);font-weight:800;font-size:12px;color:#fff;pointer-events:auto;touch-action:none;text-shadow:0 1px 2px #000}
 #bAtk{right:16px;background:rgba(229,72,77,.85)}#bDef{right:104px;background:rgba(70,130,220,.85)}
 #mbtns{position:absolute;right:8px;top:calc(212px + env(safe-area-inset-top,0px));display:flex;flex-direction:column;gap:8px}
@@ -77,7 +80,7 @@ body.mob #slots .it,body.mob #bk .it,body.mob #bk .es{width:40px;height:40px}bod
 <div id="acct"><span id="ai"><b>Guest</b><button id="mn1">Menu</button></span><span id="ao" style="display:none"><b id="an"></b><button id="svb">Save code</button><button id="lo">Log out</button><button id="mn2">Menu</button></span><div id="am"></div></div>
 <canvas id="mini" width="300" height="300"></canvas>
 <button id="tbtn">Talents [T]<b id="tbd"></b></button>
-<div id="mctl"><button id="bDef">DEFEND</button><button id="bAtk">ATTACK</button><div id="mbtns"><button id="bInv">🎒</button><button id="bCr">🛠</button><button id="bTal">★<b id="mtd"></b></button></div></div>
+<div id="mctl"><div id="joy"><div id="knob"></div><div id="jrs">↗</div></div><button id="bDef">DEFEND</button><button id="bAtk">ATTACK</button><div id="mbtns"><button id="bInv">🎒</button><button id="bCr">🛠</button><button id="bTal">★<b id="mtd"></b></button></div></div>
 <div id="menu"><div id="mcard"><div id="mlogo">🌼</div><h1>Petal Arena</h1>
 <div id="mAuth"><div class="tabs"><button id="tabL" class="on">Log in</button><button id="tabS">Sign up</button></div><input id="mu" type="text" placeholder="Name" maxlength="16" autocomplete="username"><input id="mp" type="password" placeholder="Password" maxlength="32" autocomplete="current-password"><input id="mp2" type="password" placeholder="Repeat password" maxlength="32" autocomplete="new-password" style="display:none"><button id="mgo" class="big">Log in</button><div id="mguest">Not logged in. You can still play as a guest, but progress will not be saved.</div></div>
 <div id="mUser" style="display:none">Logged in as <b id="mWho"></b><button id="mout" class="big" style="background:#e5e5e5;border-color:#888;height:34px;font-size:13px">Log out</button></div>
@@ -332,11 +335,16 @@ function openMenu(){menuOpen=true;$('menu').style.display='flex';acctUI();clr()}
 function closeMenu(){menuOpen=false;$('menu').style.display='none';clr()}
 function canPause(){return !(room&&ready&&room.peers().some(q=>!q.sameTab))}
 function setMobile(on){mobile=!!on;document.body.classList.toggle('mob',mobile);$('mobchk').checked=mobile;jx=jy=0;try{localStorage.setItem('petal_mobile',mobile?'1':'0')}catch(e){}}
-{let jid=null;
- const hm=e=>{const dx=e.clientX-W/2,dy=e.clientY-H/2,d=Math.hypot(dx,dy),k=Math.min(d/150,1);if(d<10){jx=0;jy=0}else{jx=dx/d*k;jy=dy/d*k}};
- cv.onpointerdown=e=>{if(!mobile||jid!==null)return;jid=e.pointerId;try{cv.setPointerCapture(e.pointerId)}catch(_){}hm(e)};
- cv.onpointermove=e=>{if(e.pointerId===jid)hm(e)};
- cv.onpointerup=cv.onpointercancel=e=>{if(e.pointerId!==jid)return;jid=null;jx=0;jy=0};
+function joyMove(e){const j=$('joy'),b=j.getBoundingClientRect(),dx=e.clientX-(b.left+b.width/2),dy=e.clientY-(b.top+b.height/2),R=b.width/2-10,d=Math.hypot(dx,dy)||1,k=Math.min(1,d/R);jx=dx/d*k;jy=dy/d*k;if(k<.12){jx=0;jy=0}$('knob').style.transform='translate('+dx/d*Math.min(d,R)+'px,'+dy/d*Math.min(d,R)+'px)'}
+{let jid=null;const j=$('joy');
+ j.onpointerdown=e=>{jid=e.pointerId;j.setPointerCapture(e.pointerId);joyMove(e)};j.onpointermove=e=>{if(e.pointerId===jid)joyMove(e)};
+ j.onpointerup=j.onpointercancel=e=>{if(e.pointerId!==jid)return;jid=null;jx=0;jy=0;$('knob').style.transform='translate(0,0)'};
+ const rs=$('jrs'),SK='petal_joy';let rid=null,jb=null;
+ const setJS=v=>{v=Math.max(80,Math.min(240,Math.round(v)));j.style.setProperty('--js',v+'px');return v};
+ try{const v=parseInt(localStorage.getItem(SK));if(v)setJS(v)}catch(e){}
+ rs.onpointerdown=e=>{e.preventDefault();e.stopPropagation();rid=e.pointerId;rs.setPointerCapture(e.pointerId);const b=j.getBoundingClientRect();jb={l:b.left,b:b.bottom}};
+ rs.onpointermove=e=>{if(e.pointerId!==rid)return;e.stopPropagation();setJS(Math.max(e.clientX-jb.l,jb.b-e.clientY))};
+ rs.onpointerup=rs.onpointercancel=e=>{if(e.pointerId!==rid)return;rid=null;try{localStorage.setItem(SK,parseInt(getComputedStyle(j).width))}catch(_){}};
  const hold=(id,v)=>{const b=$(id);b.onpointerdown=e=>{e.preventDefault();b.setPointerCapture(e.pointerId);ex=v};b.onpointerup=b.onpointercancel=()=>{if(ex===v)ex=0}};hold('bAtk',1);hold('bDef',-1);
  $('bInv').onclick=()=>$('inv').classList.toggle('open');$('bCr').onclick=()=>togCraft();$('bTal').onclick=()=>togTal();
  $('tabL').onclick=()=>setTab('l');$('tabS').onclick=()=>setTab('s');$('mgo').onclick=doAuth;$('mplay').onclick=closeMenu;$('mout').onclick=logout;$('lo').onclick=logout;$('mn1').onclick=openMenu;$('mn2').onclick=openMenu;
@@ -486,7 +494,7 @@ let T=0;function draw(t){T=t;c.fillStyle='#146b3f';c.fillRect(0,0,W,H);const cx=
  c.restore();
  $('lv').textContent='Level '+P.lv+' · '+score+' kills · '+((room&&ready)?Math.max(1,room.peers().filter(q=>q.presence.g).length):1)+' online'+(mpErr?' · '+mpErr:'');$('hp').style.width=Math.max(0,P.hp/P.mh*100)+'%';$('xp').style.width=P.xp/need(P.lv)*100+'%';mmDraw()}
 onmousemove=e=>{mouse.x=e.clientX;mouse.y=e.clientY};
-cv.onmousedown=e=>{if(mobile)return;if(document.activeElement)document.activeElement.blur();ex=e.button==2?-1:1};onmouseup=()=>ex=0;cv.oncontextmenu=e=>e.preventDefault();
+cv.onmousedown=e=>{if(document.activeElement)document.activeElement.blur();ex=e.button==2?-1:1};onmouseup=()=>ex=0;cv.oncontextmenu=e=>e.preventDefault();
 cv.ontouchstart=cv.ontouchmove=e=>{if(mobile)return;const t=e.touches[0];mouse.x=t.clientX;mouse.y=t.clientY;ex=e.touches.length>1?1:0};cv.ontouchend=()=>{if(!mobile)ex=0};
 onkeydown=e=>{if(e.target&&/INPUT|TEXTAREA/.test(e.target.tagName))return;K[e.code]=1;if(e.code=='KeyX'&&!e.repeat)$('inv').classList.toggle('open');if(e.code=='KeyC'&&!e.repeat)togCraft();if(e.code=='KeyT'&&!e.repeat)togTal();if(e.code=='Escape'&&talOpen)togTal();if(e.code=='Space'){ex=1;e.preventDefault()}if(e.key=='Shift')ex=-1;if(/^[1-8]$/.test(e.key)&&!e.repeat)swapBk(+e.key-1)};
 onkeyup=e=>{if(e.target&&/INPUT|TEXTAREA/.test(e.target.tagName))return;K[e.code]=0;if(e.code=='Space'||e.key=='Shift')ex=0};
