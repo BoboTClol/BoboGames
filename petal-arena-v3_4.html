@@ -91,6 +91,7 @@ body.mob #slots .it,body.mob #bk .it,body.mob #bk .es{width:40px;height:40px}bod
 <div id="talw"><canvas id="tal"></canvas><div id="tpc"><b id="tpn">0</b><span>TP</span></div><div id="ttl">Talents</div><div id="thint">Drag to look around · hold a node for 3s to upgrade</div><button id="tcl">✕</button><button id="trs">Reset</button><div id="tsum"></div></div>
 <div id="leg"><span><i style="background:#3fa7c9"></i>Pond</span></div>
 <div id="top"><span id="lv"></span><div class="bar"><div id="hp" style="background:#e64"></div></div><div class="bar"><div id="xp" style="background:#fd4"></div></div></div>
+<div id="old" style="display:none;position:fixed;inset:0;z-index:200;background:rgba(10,14,20,.96);color:#fff;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:24px;text-align:center;font-family:sans-serif"><div style="font-size:26px;font-weight:800">Update required</div><div id="oldmsg" style="max-width:420px;line-height:1.4"></div><button onclick="location.reload()" style="padding:12px 28px;border-radius:10px;border:0;background:#4fbf6c;color:#fff;font-size:16px;font-weight:800;cursor:pointer">Reload</button></div>
 <div id="hint">Move: mouse / WASD<br>Hold click / Space: attack · Right click / Shift: defend<br>X: inventory · C: crafting · T: talents · 1-8: swap with backup<br>Drag petals into your build slots<br>Friends who open the link join your world</div>
 <div id="hud"><div class="panel" id="inv"></div><div class="row" id="slots"></div><div class="row" id="bk"></div></div>
 <div class="panel" id="craft"></div><div id="gh"></div>
@@ -289,12 +290,18 @@ async function fbRoom(){
 const ACC={bon:'rq1se9sgc6'};let user=null;
 function h53(s,seed=0){let h1=0xdeadbeef^seed,h2=0x41c6ce57^seed;for(let i=0;i<s.length;i++){const c=s.charCodeAt(i);h1=Math.imul(h1^c,2654435761);h2=Math.imul(h2^c,1597334677)}h1=Math.imul(h1^(h1>>>16),2246822507)^Math.imul(h2^(h2>>>13),3266489909);h2=Math.imul(h2^(h2>>>16),2246822507)^Math.imul(h1^(h1>>>13),3266489909);return(4294967296*(2097151&h2)+(h1>>>0)).toString(36)}
 const msg=(t,bad)=>{for(const id of['am','mmsg']){const e=$(id);e.textContent=t;e.style.color=bad?'#ffb3b3':'#d6ffd0'}};
-function snap(){const iv={...inv};cs.forEach(k=>{if(k)iv[k]=(iv[k]||0)+1});return{lv:P.lv,xp:P.xp,mh:P.mh,sc:score,tal:{r:tal.r,d:tal.d},inv:iv,sl:slots.map(q=>[q.t,q.r]),bk:bk.map(q=>q?[q.t,q.r]:null)}}
+function snap(){const iv={...inv};cs.forEach(k=>{if(k)iv[k]=(iv[k]||0)+1});return{v:GAME_VER,lv:P.lv,xp:P.xp,mh:P.mh,sc:score,tal:{r:tal.r,d:tal.d},inv:iv,sl:slots.map(q=>[q.t,q.r]),bk:bk.map(q=>q?[q.t,q.r]:null)}}
 let cdb=null,syncing=false,lastCloud='',lastCloudT=0;
 const cloudP=(async()=>{try{if(typeof claude!='undefined'){if(typeof claude.use=='function')cdb=await claude.use('db')}else cdb=await fbDocs()}catch(e){}})();
+// version gate: bump GAME_VER on every release. The newest build records itself as the minimum allowed version; older builds lock themselves and stop saving.
+const GAME_VER=2;let verState=0;
+function lockOld(why){if(verState==2)return;verState=2;$('oldmsg').textContent=why||'This version of Petal Arena is out of date. Reload the page to get the latest version, so your progress is not corrupted.';$('old').style.display='flex';try{if(room&&room.leave)room.leave()}catch(e){}}
+async function verCheck(){try{await cloudP;if(!cdb){if(verState==0)verState=1;return}const d=await cdb.doc('meta/version').get(),mn=d.exists?+(d.data()||{}).min||0:0;
+ if(GAME_VER<mn){lockOld();return}if(verState==0)verState=1;if(GAME_VER>mn)await cdb.doc('meta/version').set({min:GAME_VER})}catch(e){if(verState==0)verState=1}}
+verCheck();setInterval(verCheck,60000);addEventListener('focus',verCheck);
 async function cloudGet(n){if(!cdb)return null;try{const d=await cdb.doc('saves/'+n).get();return d.exists?d.data():null}catch(e){return null}}
-function cloudPush(o,force){if(!cdb||!user)return;const j=JSON.stringify({...o,ts:0}),now=Date.now();if(j===lastCloud||(!force&&now-lastCloudT<8000))return;lastCloud=j;lastCloudT=now;cdb.doc('saves/'+user).set({ts:o.ts,d:JSON.stringify(o)}).catch(()=>{lastCloud=''})}
-function saveAcct(force){if(!user||!P||syncing)return;const o=snap();o.ts=Date.now();try{localStorage.setItem('petal_save_'+user,JSON.stringify(o))}catch(e){}cloudPush(o,force)}
+function cloudPush(o,force){if(!cdb||!user||verState!=1)return;const j=JSON.stringify({...o,ts:0}),now=Date.now();if(j===lastCloud||(!force&&now-lastCloudT<8000))return;lastCloud=j;lastCloudT=now;cdb.doc('saves/'+user).set({ts:o.ts,d:JSON.stringify(o)}).catch(()=>{lastCloud=''})}
+function saveAcct(force){if(!user||!P||syncing||verState==2)return;const o=snap();o.ts=Date.now();try{localStorage.setItem('petal_save_'+user,JSON.stringify(o))}catch(e){}cloudPush(o,force)}
 function loadAcct(n){try{const v=localStorage.getItem('petal_save_'+n);return v?JSON.parse(v):null}catch(e){return null}}
 function applySave(v){const ok=(t,r)=>PT[t]&&Number.isInteger(r)&&r>=0&&r<5;
  P.lv=Math.max(1,v.lv|0);P.xp=Math.max(0,+v.xp||0);P.mh=Math.max(100,+v.mh||100);P.hp=P.mh;score=v.sc|0;{const tr=Math.min(7,Math.max(0,(v.tal&&v.tal.r)|0)),td=Math.min(7,Math.max(0,(v.tal&&v.tal.d)|0));tal=tri(tr)+tri(td)<=P.lv?{r:tr,d:td}:{r:0,d:0}}
@@ -314,8 +321,9 @@ async function signup(n,pw){if(!/^[a-z0-9_]{3,16}$/.test(n))return 'Name: 3-16 l
  try{localStorage.setItem('petal_acc_'+n,JSON.stringify(rec))}catch(e){}await cloudP;if(cdb){try{await cdb.doc('accounts/'+n).set(rec)}catch(e){}}return null}
 function acctUI(){$('ai').style.display=user?'none':'flex';$('ao').style.display=user?'flex':'none';$('an').textContent=user?'✓ '+user:'';$('mAuth').style.display=user?'none':'block';$('mUser').style.display=user?'block':'none';$('mWho').textContent=user?' '+user:''}
 function startSession(n,isNew){user=n;try{localStorage.setItem('petal_session',n)}catch(e){}acctUI();
- const sv=loadAcct(n);if(sv)applySave(sv);syncing=true;lastCloud='';msg('Syncing...');
+ const sv=loadAcct(n);if(sv&&(sv.v||0)>GAME_VER){lockOld('Your saved progress is from a newer version of Petal Arena. Reload the page to get the latest version.');return}if(sv)applySave(sv);syncing=true;lastCloud='';msg('Syncing...');
  cloudP.then(()=>cloudGet(n)).then(c=>{if(user!==n)return;let cv=null;try{cv=c&&JSON.parse(c.d)}catch(e){}
+  if(cv&&(cv.v||0)>GAME_VER){syncing=false;lockOld('Your cloud progress is from a newer version of Petal Arena. Reload the page to get the latest version.');return}
   if(cv&&(!sv||(cv.ts||0)>(sv.ts||0))){applySave(cv);msg('Progress loaded from cloud')}else msg(sv?'Progress loaded'+(cdb?'':' (this device only)'):(isNew?'Account created! Welcome, '+n+(cdb?'':' (saved on this device only)'):'New account: progress saves from now on'));
   syncing=false;saveAcct(true)}).catch(()=>{syncing=false});
  setTimeout(()=>{if(user===n&&!menuOpen)msg('')},5000)}
@@ -502,5 +510,5 @@ function respawn(){retCraft();Object.assign(P,{x:C,y:C,vx:0,vy:0,hp:P.mh,R:52});
 $('ov').onclick=respawn;
 setTimeout(()=>$('hint').style.opacity=0,14000);
 init();autoLogin();let last=performance.now();
-(function loop(t){const dt=Math.min(.05,(t-last)/1000);last=t;DT=dt;if(!(menuOpen&&canPause())){net(dt);upd(dt)}draw(t);tbBadge();if(talOpen)drawTal(t);requestAnimationFrame(loop)})(last);
+(function loop(t){const dt=Math.min(.05,(t-last)/1000);last=t;DT=dt;if(verState!=2&&!(menuOpen&&canPause())){net(dt);upd(dt)}draw(t);tbBadge();if(talOpen)drawTal(t);requestAnimationFrame(loop)})(last);
 </script></body></html>
