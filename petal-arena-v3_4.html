@@ -114,7 +114,7 @@ PONDS.forEach(p=>{p.pb=[];p.pd=[];p.rx=[0,1,2].map(()=>(rnd()-.5)*p.r*.7);p.ry=[
  p.ms=[];p.sp=[];for(let i=0;i<8;i++)p.ms.push({a:rnd()*6.283,d:.3+rnd()*.6,s:.8+rnd()*.8,k:rnd()*6.28});for(let i=0;i<36;i++)p.sp.push({a:rnd()*6.283,d:.05+rnd()*.88,ph:rnd()*6.28});
  for(let i=0;i<34;i++){const a=i*6.283/34+rnd()*.15,rr=pr(p,a)*(1.02+rnd()*.12),q=rnd();DEC.push({x:p.x+Math.cos(a)*rr,y:p.y+Math.sin(a)*rr*.86,k:q<.22?'stone':q<.42?'cluster':q<.60?'boulder':q<.72?'big':q<.88?'shrub':'grass',s:.6+rnd()*.7,c:rnd()*5|0})}});
 let P,mobs,drops,inv,slots,ex,dead,score,dr=null,mouse={x:innerWidth/2,y:innerHeight/2},K={};
-const need=l=>25+l*l*8,mk=(t,r)=>({t,r,hp:PT[t].hp*RAR[r].m,cd:0,hit:0,x:0,y:0,a:0,em:0});
+const spinB=()=>slots.reduce((a,s)=>s.t=='fast'&&s.cd<=0?a+(s.r>3?.4:.2):a,0),need=l=>25+l*l*8,mk=(t,r)=>({t,r,hp:PT[t].hp*RAR[r].m,cd:0,hit:0,x:0,y:0,a:0,em:0});
 const give=(t,r)=>{if(t!='basic'){const k=t+':'+r;inv[k]=(inv[k]||0)+1}},take=(t,r)=>{if(t!='basic')inv[t+':'+r]--};
 function init(keep){T0=Date.now();tal={r:0,d:0};P={x:C,y:C,vx:0,vy:0,hp:100,mh:100,lv:1,xp:0,ang:0,R:52};if(!keep){mobs=[];mm=new Map()}allies=[];drops=[];inv={};slots=[];bk=[null,null,null,null,null];fx=[];cs=[null,null,null,null,null];res=null;$('craft').classList.remove('open');for(let i=0;i<5;i++)slots.push(mk('basic',0));ex=0;dead=false;score=0;ui()}
 const KI=Object.keys(MT),KP=Object.keys(PT),CAP=[14,9,5,4,2];let mm=new Map(),nid=1,T0=Date.now(),allies=[],born=[],fx=[],pops=[],slowT=0,slowF=1,bk=[null,null,null,null,null];
@@ -128,7 +128,7 @@ function upd(dt){PL=allPl();if(dead)return;
  slowT=Math.max(0,slowT-dt);const nl=slots.filter(q=>q.t=='lily'&&q.cd<=0),SF=(1+Math.min(.3,.15*nl.length))*(slowT>0?slowF:1);let kx=(K.KeyD||K.ArrowRight?1:0)-(K.KeyA||K.ArrowLeft?1:0),ky=(K.KeyS||K.ArrowDown?1:0)-(K.KeyW||K.ArrowUp?1:0),tx=0,ty=0;
  if(mobile){tx=jx*260*SF;ty=jy*260*SF}else if(kx||ky){const l=Math.hypot(kx,ky);tx=kx/l*260*SF;ty=ky/l*260*SF}else{const dx=mouse.x-W/2,dy=mouse.y-H/2,d=Math.hypot(dx,dy);if(d>10&&!talOpen&&!(document.activeElement&&/INPUT|TEXTAREA/.test(document.activeElement.tagName))){const s=Math.min(d/150,1)*260*SF;tx=dx/d*s;ty=dy/d*s}}
  const f=Math.min(1,dt*8);P.vx+=(tx-P.vx)*f;P.vy+=(ty-P.vy)*f;P.x=cl(P.x+P.vx*dt,0,WS);P.y=cl(P.y+P.vy*dt,0,WS);
- if(!nl.length)P.hp=Math.min(P.mh,P.hp+dt*1.5);else if(P.hp>P.mh*.25)P.hp-=nl.reduce((a,q)=>a+Math.pow(1.15,q.r),0)*dt;P.ang+=dt*2.2*(1+.2*slots.filter(s=>s.t=='fast'&&s.cd<=0).length);P.R+=((ex==1?105:ex==-1?28:52)-P.R)*Math.min(1,dt*10);
+ if(!nl.length)P.hp=Math.min(P.mh,P.hp+dt*1.5);else if(P.hp>P.mh*.25)P.hp-=nl.reduce((a,q)=>a+Math.pow(1.15,q.r),0)*dt;P.ang+=dt*2.2*(1+spinB());P.R+=((ex==1?105:ex==-1?28:52)-P.R)*Math.min(1,dt*10);
  slots.forEach((s,i)=>{const d=PT[s.t],M=RAR[s.r].m;
   if(s.cd>0){s.cd-=dt;if(s.cd<=0){s.hp=d.hp*M;s.em=0}return}
   s.hit-=dt;s.a=P.ang+i*6.283/slots.length;s.em=Math.min(1,(s.em==null?1:s.em)+dt/.7);s.e=s.em*s.em*(3-2*s.em);const RR=(P.R+(d.far?Math.max(0,(P.R-52)/53)*60:0))*s.e;s.x=P.x+Math.cos(s.a)*RR;s.y=P.y+Math.sin(s.a)*RR;
@@ -211,7 +211,7 @@ function updAllies(dt){bk.forEach(q=>{if(q&&q.cd>0){q.cd-=dt;if(q.cd<=0){q.hp=PT
 const PN={basic:'Basic',pollen:'Pollen',leaf:'Leaf',stem:'Stem',flower:'Flower',fast:'Fast',chilly:'Chilly',wings:'Wings',egg:'Ant egg',lily:'Lily pad',bwing:'Butterfly wings'},PNS={bwing:'Bfly wings',egg:'Ant egg',lily:'Lily pad'};
 const PDESC={basic:'The simplest petal ever.',pollen:'A cloud of sticky pollen.',leaf:'Heals you over time.',stem:'Tough, but slow to grow back.',flower:'Poisons what it touches.',fast:'Makes all petals orbit faster.',chilly:'Sets enemies on fire.',wings:'Flies farther when attacking.',egg:'Hatches 3 ant allies.',lily:'Speeds you up, drains your HP.',bwing:'Razor-thin wings that can strike hard.'};
 function tipHTML(t,r){const d=PT[t],M=RAR[r].m,dmg=+(d.d*M*DMM()).toFixed(1),rl=+(d.rl*RLM()).toFixed(2);let ex='';
- if(d.crit)ex='Sharp: '+(d.crit*100).toFixed(1)+'% chance for ×10 damage';else if(d.heal)ex='Heal +'+d.heal*M+' HP/s';else if(d.poi)ex='Poison '+M+' dmg/2s (max '+10*M+')';else if(d.fire)ex='Burn '+2*M+' dmg/s for 4s';else if(d.spin)ex='Orbit speed +20%';else if(d.far)ex='Reach +60 when attacking';else if(d.egg)ex='Ally ant HP '+(MT.ant.hp*MH[r]*.5|0);else if(d.lily)ex='Speed +15% · drain '+Math.pow(1.15,r).toFixed(2)+' HP/s';
+ if(d.crit)ex='Sharp: '+(d.crit*100).toFixed(1)+'% chance for ×10 damage';else if(d.heal)ex='Heal +'+d.heal*M+' HP/s';else if(d.poi)ex='Poison '+M+' dmg/2s (max '+10*M+')';else if(d.fire)ex='Burn '+2*M+' dmg/s for 4s';else if(d.spin)ex='Orbit speed +'+(r>3?40:20)+'%';else if(d.far)ex='Reach +60 when attacking';else if(d.egg)ex='Ally ant HP '+(MT.ant.hp*MH[r]*.5|0);else if(d.lily)ex='Speed +15% · drain '+Math.pow(1.15,r).toFixed(2)+' HP/s';
  return '<b>'+(PN[t]||t)+'</b><span style="color:'+RAR[r].c+'">'+RAR[r].n+'</span><i>'+PDESC[t]+'</i><div><u style="color:#ff8a80">Health</u> '+d.hp*M+'</div><div><u style="color:#7fc4ff">Damage</u> '+dmg+'</div><div><u style="color:#ffd27f">Reload</u> '+rl+'s</div>'+(ex?'<em>'+ex+'</em>':'')}
 function moveTip(ev){const tp=$('tip');let x=ev.clientX+14,y=ev.clientY-tp.offsetHeight-12;if(x+156>innerWidth)x=ev.clientX-164;if(y<6)y=ev.clientY+18;tp.style.left=x+'px';tp.style.top=y+'px'}
 function showTip(t,r,ev){const tp=$('tip');tp.innerHTML=tipHTML(t,r);tp.style.display='block';moveTip(ev)}
@@ -393,7 +393,7 @@ function hostTick(dt){sepMobs();
  if(PL.length&&mobs.length<90)spawn(PL[Math.random()*PL.length|0]);
  if(PL.length&&Math.random()<.06){const p=PONDS[Math.random()*3|0];if(PL.some(q=>Math.hypot(p.x-q.x,p.y-q.y)<1600)&&mobs.filter(m=>m.k=='lilypad'&&Math.hypot(m.x-p.x,m.y-p.y)<p.r*1.2).length<3){const a=Math.random()*6.28,d=Math.random()*.6*p.r;mkmob(nid++,'lilypad',zone(p.x,p.y),p.x+Math.cos(a)*d,p.y+Math.sin(a)*d*.86)}}
  snapT-=dt;if(snapT<=0){snapT=.1;if(room&&ready&&room.peers().some(q=>!q.sameTab))send('snap',{m:mobs.map(m=>[m.id,KI.indexOf(m.k),m.r,m.x|0,m.y|0,Math.ceil(m.hp),(m.pz?1:0)|(m.fire?2:0)])})}}
-function pushPres(){if(!room||!ready)return;const ns=slots.filter(q=>q.t=='fast'&&q.cd<=0).length;room.presence({g:(dead||solo)?0:1,t:T0,x:P.x|0,y:P.y|0,a:+P.ang.toFixed(2),R:P.R|0,w:+(2.2*(1+.2*ns)).toFixed(2),lv:P.lv,nm:user||'',p:slots.map(q=>[KP.indexOf(q.t),q.r,q.cd>0?0:1]),al:allies.map(a=>[a.x|0,a.y|0,a.r])}).catch(()=>{})}
+function pushPres(){if(!room||!ready)return;const ns=spinB();room.presence({g:(dead||solo)?0:1,t:T0,x:P.x|0,y:P.y|0,a:+P.ang.toFixed(2),R:P.R|0,w:+(2.2*(1+ns)).toFixed(2),lv:P.lv,nm:user||'',p:slots.map(q=>[KP.indexOf(q.t),q.r,q.cd>0?0:1]),al:allies.map(a=>[a.x|0,a.y|0,a.r])}).catch(()=>{})}
 function net(dt){const h=hostNow();if(h!==isHost){isHost=h;if(h){nid=Math.max(nid,...mobs.map(m=>m.id+1));mobs.forEach(m=>{if(m.hp<=m.mh/2)m.half=1;if((m.pzf&1)&&!m.pz)m.pz={rem:5,t:2,k:1};if((m.pzf&2)&&!m.fire)m.fire={left:2,t:1,k:1}})}else{mobs=[];mm=new Map()}}
  if(!isHost){const n=performance.now(),l=mobs.length;mobs=mobs.filter(m=>n-m.ls<1000);if(mobs.length!=l)mm=new Map(mobs.map(m=>[m.id,m]))}
  prT-=dt;if(prT<=0){prT=mpRate;pushPres()}
