@@ -198,12 +198,12 @@ function craftUI(){const p=$('craft'),st=p.scrollTop;p.replaceChildren();
  if(rk){const[t,r]=rk.split(':');re=cell(t,+r,'','');re.onpointerdown=null;re.removeAttribute('data-s');re.style.opacity=ok?.55:1}else re=mkd('es');
  re.style.left='226px';re.style.top='49px';box.appendChild(re);p.appendChild(box);
  const b=document.createElement('button');b.className='cb';b.textContent='Craft';b.disabled=!ok;b.onclick=doCraft;p.appendChild(b);
- p.appendChild(mkd('note',cmsg&&!ok?cmsg:(f?Math.round(CR[+f.split(':')[1]]*100)+'% success':'Success: 100% Common, 75% Unusual, 50% Rare, 25% Epic, 10% Legendary')+' · put 5 of the same petal · a failure loses 3 of 5'));
+ p.appendChild(mkd('note',cmsg&&!ok?cmsg:(f?Math.round(CR[+f.split(':')[1]]*100)+'% success':'Success: 100% Common, 75% Unusual, 50% Rare, 25% Epic, 10% Legendary')+' · put 5 of the same petal · a failure loses 1 of 5'));
  const lh=mkd('sh','Loadout');lh.style.background='#8a5a2b';p.appendChild(lh);const lg=mkd('grid');slots.forEach((q,i)=>lg.appendChild(cell(q.t,q.r,'','s'+i)));p.appendChild(lg);
  const bh=mkd('sh','Backup');bh.style.background='#8a5a2b';p.appendChild(bh);const bg=mkd('grid');bk.forEach((q,i)=>{if(q)bg.appendChild(cell(q.t,q.r,'','b'+i));else{const e=mkd('es');e.dataset.s='b'+i;bg.appendChild(e)}});p.appendChild(bg);
  const ih=mkd('sh','Inventory');ih.style.background='#8a5a2b';p.appendChild(ih);const g=mkd('');g.dataset.s='inv';sec(g);p.appendChild(g);p.scrollTop=st}
 const CR=[1,.75,.5,.25,.1];let cmsg='';
-function doCraft(){const f=cs.find(x=>x);if(!f||!cs.every(x=>x))return;const[t,r]=f.split(':');if(+r>=5)return;cs=[null,null,null,null,null];if(Math.random()<CR[+r]){cmsg='';res=t+':'+(+r+1);give(t,+r+1)}else{res=null;cmsg='Crafting failed! 3 of 5 petals were lost.';give(t,+r);give(t,+r)}ui()}
+function doCraft(){const f=cs.find(x=>x);if(!f||!cs.every(x=>x))return;const[t,r]=f.split(':');if(+r>=5)return;cs=[null,null,null,null,null];if(Math.random()<CR[+r]){cmsg='';res=t+':'+(+r+1);give(t,+r+1)}else{res=null;cmsg='Crafting failed! 1 of 5 petals was lost.';for(let i=0;i<4;i++)give(t,+r)}ui()}
 function retCraft(){cs.forEach(k=>{if(k){const[t,r]=k.split(':');give(t,+r)}});cs=[null,null,null,null,null];res=null;ui()}
 function togCraft(){if(!$('craft').classList.toggle('open'))retCraft()}
 function okCraft(k){if(+k.split(':')[1]>=5)return false;const f=cs.find(x=>x);return !f||f==k}
