@@ -427,7 +427,7 @@ function onDie(d){mobs=mobs.filter(m=>m.id!==d.id);mm.delete(d.id);if(!dead&&Mat
 function sepMobs(){const n=mobs.length;for(let i=0;i<n;i++){const a=mobs[i];for(let j=i+1;j<n;j++){const b=mobs[j],mn=(a.rad+b.rad)*.9;let dx=b.x-a.x,dy=b.y-a.y,d2=dx*dx+dy*dy;if(d2>=mn*mn)continue;if(d2<1e-4){dx=Math.random()-.5;dy=Math.random()-.5;d2=dx*dx+dy*dy}const d=Math.sqrt(d2),ov=mn-d,nx=dx/d,ny=dy/d,sa=MT[a.k].sp>0,sb=MT[b.k].sp>0;
  if(sa&&sb){a.x-=nx*ov/2;a.y-=ny*ov/2;b.x+=nx*ov/2;b.y+=ny*ov/2}else if(sa){a.x-=nx*ov;a.y-=ny*ov}else if(sb){b.x+=nx*ov;b.y+=ny*ov}}}}
 function hostTick(dt){sepMobs();
- for(const m of mobs)if((m.k=='hole'||m.k=='hive')&&!m.half&&m.hp>0&&m.hp<=m.mh/2){m.half=1;if(m.k=='hole')born.push(['ant',m],['ant',m]);else born.push(['bee',m])}
+ for(const m of mobs)if((m.k=='hole'||m.k=='hive')&&!m.half&&m.hp>0&&m.hp<=m.mh/2){m.half=1;if(m.k=='hole')born.push(['ant',m],['ant',m]);else born.push(['bee',m],['bworker',m],['bworker',m])}
  mobs=mobs.filter(m=>{if(m.hp<=0){die(m);if(m.k=='hole')born.push(['sant',m],['sant',m],['sant',m],['queen',m]);else if(m.k=='hive')born.push(['bee',m],['bee',m],['bworker',m],['bworker',m],['qbee',m]);return false}return !PL.length||PL.some(q=>Math.hypot(m.x-q.x,m.y-q.y)<1800)});
  while(born.length){const[k,h]=born.pop(),a=Math.random()*6.28,d=50+Math.random()*70;mkmob(nid++,k,h.r,cl(h.x+Math.cos(a)*d,0,WS),cl(h.y+Math.sin(a)*d,0,WS))}
  mm=new Map(mobs.map(m=>[m.id,m]));
