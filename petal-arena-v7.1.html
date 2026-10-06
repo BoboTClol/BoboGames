@@ -203,20 +203,20 @@ function craftUI(){const p=$('craft'),st=p.scrollTop;p.replaceChildren();
  const h=mkd('pt','Craft'),x=mkd('x','✕');x.onclick=togCraft;h.appendChild(x);p.appendChild(h);
  const box=mkd('cbox'),pos=[[90,26],[139,62],[121,120],[59,120],[41,62]];
  cs.forEach((k,i)=>{let e;if(k){const[t,r]=k.split(':');e=cell(t,+r,'','c'+i)}else{e=mkd('es');e.dataset.s='c'+i}e.style.left=pos[i][0]-26+'px';e.style.top=pos[i][1]-26+'px';box.appendChild(e)});
- const f=cs.find(x=>x),ok=!!f&&cs.every(x=>x)&&+f.split(':')[1]<5;box.appendChild(mkd('arw','➜'));
+ const f=cs.find(x=>x),ok=!!f&&cs.every(x=>x)&&+f.split(':')[1]<6;box.appendChild(mkd('arw','➜'));
  const rk=ok?f.split(':')[0]+':'+(+f.split(':')[1]+1):res;let re;
  if(rk){const[t,r]=rk.split(':');re=cell(t,+r,'','');re.onpointerdown=null;re.removeAttribute('data-s');re.style.opacity=ok?.55:1}else re=mkd('es');
  re.style.left='226px';re.style.top='49px';box.appendChild(re);p.appendChild(box);
  const b=document.createElement('button');b.className='cb';b.textContent='Craft';b.disabled=!ok;b.onclick=doCraft;p.appendChild(b);
- p.appendChild(mkd('note',cmsg&&!ok?cmsg:(f?Math.round(CR[+f.split(':')[1]]*100)+'% success':'Success: 100% Common, 75% Unusual, 50% Rare, 25% Epic, 10% Legendary')+' · put 5 of the same petal · a failure loses 1 of 5'));
+ p.appendChild(mkd('note',cmsg&&!ok?cmsg:(f?Math.round(CR[+f.split(':')[1]]*100)+'% success':'Success: 100% Common, 75% Unusual, 50% Rare, 33% Epic, 20% Legendary, 10% Mythic')+' · put 5 of the same petal · a failure loses 1 of 5'));
  const lh=mkd('sh','Loadout');lh.style.background='#8a5a2b';p.appendChild(lh);const lg=mkd('grid');slots.forEach((q,i)=>lg.appendChild(cell(q.t,q.r,'','s'+i)));p.appendChild(lg);
  const bh=mkd('sh','Backup');bh.style.background='#8a5a2b';p.appendChild(bh);const bg=mkd('grid');bk.forEach((q,i)=>{if(q)bg.appendChild(cell(q.t,q.r,'','b'+i));else{const e=mkd('es');e.dataset.s='b'+i;bg.appendChild(e)}});p.appendChild(bg);
  const ih=mkd('sh','Inventory');ih.style.background='#8a5a2b';p.appendChild(ih);const g=mkd('');g.dataset.s='inv';sec(g);p.appendChild(g);p.scrollTop=st}
-const CR=[1,.75,.5,.25,.1];let cmsg='';
-function doCraft(){const f=cs.find(x=>x);if(!f||!cs.every(x=>x))return;const[t,r]=f.split(':');if(+r>=5)return;cs=[null,null,null,null,null];if(Math.random()<CR[+r]){cmsg='';res=t+':'+(+r+1);give(t,+r+1)}else{res=null;cmsg='Crafting failed! 1 of 5 petals was lost.';for(let i=0;i<4;i++)give(t,+r)}ui()}
+const CR=[1,.75,.5,.33,.2,.1];let cmsg='';
+function doCraft(){const f=cs.find(x=>x);if(!f||!cs.every(x=>x))return;const[t,r]=f.split(':');if(+r>=6)return;cs=[null,null,null,null,null];if(Math.random()<CR[+r]){cmsg='';res=t+':'+(+r+1);give(t,+r+1)}else{res=null;cmsg='Crafting failed! 1 of 5 petals was lost.';for(let i=0;i<4;i++)give(t,+r)}ui()}
 function retCraft(){cs.forEach(k=>{if(k){const[t,r]=k.split(':');give(t,+r)}});cs=[null,null,null,null,null];res=null;ui()}
 function togCraft(){if(!$('craft').classList.toggle('open'))retCraft()}
-function okCraft(k){if(+k.split(':')[1]>=5)return false;const f=cs.find(x=>x);return !f||f==k}
+function okCraft(k){if(+k.split(':')[1]>=6)return false;const f=cs.find(x=>x);return !f||f==k}
 function cclick(d){if(d.src[0]=='c')drop(d,'inv');else{const j=cs.indexOf(null);if(j>=0)drop(d,'c'+j)}}
 function swapBk(i){if(dead||i>=slots.length||!bk[i])return;[slots[i],bk[i]]=[bk[i],slots[i]];slots[i].em=0;ui()}
 function drop(d,dst){if(!dst)return;const f=d.src[0],fi=+d.src.slice(1),to=dst[0]=='i'?'inv':dst,tj=+to.slice(1),k=d.t+':'+d.r;
@@ -325,7 +325,7 @@ function snap(){const iv={...inv};cs.forEach(k=>{if(k)iv[k]=(iv[k]||0)+1});retur
 let cdb=null,syncing=false,lastCloud='',lastCloudT=0;
 const cloudP=(async()=>{try{if(typeof claude!='undefined'){if(typeof claude.use=='function')cdb=await claude.use('db')}else cdb=await fbDocs()}catch(e){}})();
 // version gate: bump GAME_VER on every release. The newest build records itself as the minimum allowed version; older builds lock themselves and stop saving.
-const GAME_VER=8,NEWEST_URL='https://github.com/BoboTClol/BoboGames/';let verState=0;
+const GAME_VER=7.1,NEWEST_URL='https://github.com/BoboTClol/BoboGames/';let verState=0;
 function lockOld(why){if(verState==2)return;verState=2;const m=$('oldmsg'),a=document.createElement('a');a.href=a.textContent=NEWEST_URL;a.style.cssText='color:#8fd3ff;word-break:break-all';m.replaceChildren((why||'This version of Petal Arena is outdated.')+' Please get the newest version at ',a,'. This is so your account does not get corrupted.');$('old').style.display='flex';try{if(room&&room.leave)room.leave()}catch(e){}}
 async function verCheck(){try{await cloudP;if(!cdb){if(verState==0)verState=1;return}const d=await cdb.doc('meta/version').get(),mn=d.exists?+(d.data()||{}).min||0:0;
  if(GAME_VER<mn){lockOld();return}if(verState==0)verState=1;if(GAME_VER>mn)await cdb.doc('meta/version').set({min:GAME_VER})}catch(e){if(verState==0)verState=1}}
