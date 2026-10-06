@@ -325,10 +325,10 @@ function snap(){const iv={...inv};cs.forEach(k=>{if(k)iv[k]=(iv[k]||0)+1});retur
 let cdb=null,syncing=false,lastCloud='',lastCloudT=0;
 const cloudP=(async()=>{try{if(typeof claude!='undefined'){if(typeof claude.use=='function')cdb=await claude.use('db')}else cdb=await fbDocs()}catch(e){}})();
 // version gate: bump GAME_VER on every release. The newest build records itself as the minimum allowed version; older builds lock themselves and stop saving.
-const GAME_VER=7.1,NEWEST_URL='https://github.com/BoboTClol/BoboGames/';let verState=0;
+const GAME_VER=7.1,NEWEST_URL='https://github.com/BoboTClol/BoboGames/';let verState=0;const savedNewer=v=>(+v||0)>GAME_VER&&+v!==8;
 function lockOld(why){if(verState==2)return;verState=2;const m=$('oldmsg'),a=document.createElement('a');a.href=a.textContent=NEWEST_URL;a.style.cssText='color:#8fd3ff;word-break:break-all';m.replaceChildren((why||'This version of Petal Arena is outdated.')+' Please get the newest version at ',a,'. This is so your account does not get corrupted.');$('old').style.display='flex';try{if(room&&room.leave)room.leave()}catch(e){}}
-async function verCheck(){try{await cloudP;if(!cdb){if(verState==0)verState=1;return}const d=await cdb.doc('meta/version').get(),mn=d.exists?+(d.data()||{}).min||0:0;
- if(GAME_VER<mn){lockOld();return}if(verState==0)verState=1;if(GAME_VER>mn)await cdb.doc('meta/version').set({min:GAME_VER})}catch(e){if(verState==0)verState=1}}
+async function verCheck(){try{await cloudP;if(!cdb){if(verState==0)verState=1;return}const d=await cdb.doc('meta/gate').get(),mn=d.exists?+(d.data()||{}).min||0:0;
+ if(GAME_VER<mn){lockOld();return}if(verState==0)verState=1;if(GAME_VER>mn)await cdb.doc('meta/gate').set({min:GAME_VER});try{const o=await cdb.doc('meta/version').get(),om=o.exists?+(o.data()||{}).min||0:0;if(GAME_VER>om)await cdb.doc('meta/version').set({min:GAME_VER})}catch(e){}}catch(e){if(verState==0)verState=1}}
 verCheck();setInterval(verCheck,60000);addEventListener('focus',verCheck);
 async function cloudGet(n){if(!cdb)return null;try{const d=await cdb.doc('saves/'+n).get();return d.exists?d.data():null}catch(e){return null}}
 function cloudPush(o,force){if(!cdb||!user||verState!=1)return;const j=JSON.stringify({...o,ts:0}),now=Date.now();if(j===lastCloud||(!force&&now-lastCloudT<8000))return;lastCloud=j;lastCloudT=now;cdb.doc('saves/'+user).set({ts:o.ts,d:JSON.stringify(o)}).catch(()=>{lastCloud=''})}
@@ -353,9 +353,9 @@ async function signup(n,pw){if(!/^[a-z0-9_]{3,16}$/.test(n))return 'Name: 3-16 l
  try{localStorage.setItem('petal_acc_'+n,JSON.stringify(rec))}catch(e){}await cloudP;if(cdb){try{await cdb.doc('accounts/'+n).set(rec)}catch(e){}}return null}
 function acctUI(){$('ai').style.display=user?'none':'flex';$('ao').style.display=user?'flex':'none';$('an').textContent=user?'✓ '+user:'';$('mAuth').style.display=user?'none':'block';$('mUser').style.display=user?'block':'none';$('mWho').textContent=user?' '+user:''}
 function startSession(n,isNew){user=n;try{localStorage.setItem('petal_session',n)}catch(e){}acctUI();
- const sv=loadAcct(n);if(sv&&(sv.v||0)>GAME_VER){lockOld('Your saved progress is from a newer version of Petal Arena.');return}if(sv)applySave(sv);syncing=true;lastCloud='';msg('Syncing...');
+ const sv=loadAcct(n);if(sv&&savedNewer(sv.v)){lockOld('Your saved progress is from a newer version of Petal Arena.');return}if(sv)applySave(sv);syncing=true;lastCloud='';msg('Syncing...');
  cloudP.then(()=>cloudGet(n)).then(c=>{if(user!==n)return;let cv=null;try{cv=c&&JSON.parse(c.d)}catch(e){}
-  if(cv&&(cv.v||0)>GAME_VER){syncing=false;lockOld('Your cloud progress is from a newer version of Petal Arena.');return}
+  if(cv&&savedNewer(cv.v)){syncing=false;lockOld('Your cloud progress is from a newer version of Petal Arena.');return}
   if(cv&&(!sv||(cv.ts||0)>(sv.ts||0))){applySave(cv);msg('Progress loaded from cloud')}else msg(sv?'Progress loaded'+(cdb?'':' (this device only)'):(isNew?'Account created! Welcome, '+n+(cdb?'':' (saved on this device only)'):'New account: progress saves from now on'));
   syncing=false;saveAcct(true)}).catch(()=>{syncing=false});
  setTimeout(()=>{if(user===n&&!menuOpen)msg('')},5000)}
